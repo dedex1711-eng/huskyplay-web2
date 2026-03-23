@@ -4,8 +4,9 @@ const USER   = localStorage.getItem('hp_user');
 const PASS   = localStorage.getItem('hp_pass');
 if (!SERVER) { location.href = 'index.html'; }
 
-// ── CORS Proxy (usado automaticamente quando em HTTPS) ────────────────────────
-const _PROXY = localStorage.getItem('hp_proxy') || '';
+// ── CORS Proxy ────────────────────────────────────────────────────────────────
+const _PROXY_DEFAULT = 'https://super-hall-2081.alanadianabrito22.workers.dev';
+const _PROXY = localStorage.getItem('hp_proxy') || _PROXY_DEFAULT;
 function proxyUrl(url) {
   return _PROXY ? `${_PROXY}?url=${encodeURIComponent(url)}` : url;
 }
@@ -912,7 +913,7 @@ async function loadRadioCategory(cat) {
     } else {
       url = `${RADIO_API}/json/stations/search?name=${encodeURIComponent(cat.query)}&limit=200&hidebroken=true`;
     }
-    const data = await fetch(url, { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).then(r => r.json());
+    const data = await fetch(proxyUrl(url), { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).then(r => r.json());
     _radioStations = data || [];
     _radioFiltered = _radioStations;
     if (cat.key === 'brasil') _cachedRadio = _radioStations;
@@ -1002,7 +1003,7 @@ function createRadioCard(station) {
 
 function openRadioPlayer(station) {
   if (!station.url_resolved) return;
-  fetch(`${RADIO_API}/json/url/${station.stationuuid}`, { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).catch(() => {});
+  fetch(proxyUrl(`${RADIO_API}/json/url/${station.stationuuid}`), { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).catch(() => {});
   addRecent(station.stationuuid, station.name, 'radio', station.favicon);
 
   // Stop any existing audio
@@ -1166,7 +1167,7 @@ function openRadioPlayer(station) {
     const nt = grid.querySelector('#rpNowTitle');
     if (nt) nt.textContent = s.name || '';
     addRecent(s.stationuuid, s.name, 'radio', s.favicon);
-    fetch(`${RADIO_API}/json/url/${s.stationuuid}`, { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).catch(() => {});
+    fetch(proxyUrl(`${RADIO_API}/json/url/${s.stationuuid}`), { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).catch(() => {});
   }
 
   loadStation(station);
@@ -1210,7 +1211,7 @@ async function loadHomeRadios() {
   try {
     const stations = _cachedRadio
       ? _cachedRadio.slice(0,20)
-      : await fetch(`${RADIO_API}/json/stations/bycountry/brazil?limit=20&hidebroken=true&order=clickcount&reverse=true`, { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).then(r => r.json());
+      : await fetch(proxyUrl(`${RADIO_API}/json/stations/bycountry/brazil?limit=20&hidebroken=true&order=clickcount&reverse=true`), { headers: { 'User-Agent': 'HuskyPlay/1.0' } }).then(r => r.json());
     if (!_cachedRadio) _cachedRadio = stations;
     const scrollEl = document.getElementById('radioHomeScroll');
     if (!scrollEl) return;
@@ -2432,7 +2433,7 @@ async function runSplash() {
         fetchJsonTimeout(api('get_series')).then(d => { _cachedSeries = d || []; })
       ])
     },
-    { id: 'si-radio',  fetch: () => fetch(`${RADIO_API}/json/stations/bycountry/brazil?limit=60&hidebroken=true&order=clickcount&reverse=true`).then(r => r.json()).then(d => { _cachedRadio = d || []; }) },
+    { id: 'si-radio',  fetch: () => fetch(proxyUrl(`${RADIO_API}/json/stations/bycountry/brazil?limit=60&hidebroken=true&order=clickcount&reverse=true`)).then(r => r.json()).then(d => { _cachedRadio = d || []; }) },
   ];
 
   const bar = document.getElementById('splashBar');
